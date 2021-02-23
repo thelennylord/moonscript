@@ -20,79 +20,6 @@ local construct_comprehension
 construct_comprehension = require("moonscript.transform.comprehension").construct_comprehension
 local unpack
 unpack = require("moonscript.util").unpack
-local with_continue_listener
-with_continue_listener = function(body)
-  local continue_name = nil
-  return {
-    Run(function(self)
-      return self:listen("continue", function()
-        if not (continue_name) then
-          continue_name = NameProxy("continue")
-          self:put_name(continue_name)
-        end
-        return continue_name
-      end)
-    end),
-    build.group(body),
-    Run(function(self)
-      if not (continue_name) then
-        return 
-      end
-      local last = last_stm(body)
-      local enclose_lines = types.terminating[last and ntype(last)]
-      self:put_name(continue_name, nil)
-      return self:splice(function(lines)
-        if enclose_lines then
-          lines = {
-            "do",
-            {
-              lines
-            }
-          }
-        end
-        return {
-          {
-            "assign",
-            {
-              continue_name
-            },
-            {
-              "false"
-            }
-          },
-          {
-            "repeat",
-            "true",
-            {
-              lines,
-              {
-                "assign",
-                {
-                  continue_name
-                },
-                {
-                  "true"
-                }
-              }
-            }
-          },
-          {
-            "if",
-            {
-              "not",
-              continue_name
-            },
-            {
-              {
-                "break"
-              }
-            }
-          }
-        }
-      end)
-    end)
-  }
-end
 local extract_declarations
 extract_declarations = function(self, body, start, out)
   if body == nil then
@@ -305,18 +232,6 @@ return Transformer({
       return destructure.split_assign(self, node)
     end
     return node
-  end,
-  continue = function(self, node)
-    local continue_name = self:send("continue")
-    if not (continue_name) then
-      error("continue must be inside of a loop")
-    end
-    return build.group({
-      build.assign_one(continue_name, "true"),
-      {
-        "break"
-      }
-    })
   end,
   export = function(self, node)
     if #node > 2 then
@@ -774,15 +689,12 @@ return Transformer({
         })
       })
     end
-    node.body = with_continue_listener(node.body)
   end,
   ["while"] = function(self, node)
     smart_node(node)
-    node.body = with_continue_listener(node.body)
   end,
   ["for"] = function(self, node)
     smart_node(node)
-    node.body = with_continue_listener(node.body)
   end,
   switch = function(self, node, ret)
     local exp, conds = unpack(node, 2)

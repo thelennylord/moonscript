@@ -21,7 +21,8 @@ local cascading = Set({
 })
 local terminating = Set({
   "return",
-  "break"
+  "break",
+  "continue"
 })
 local ntype
 ntype = function(node)
