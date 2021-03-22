@@ -268,6 +268,19 @@ return Transformer({
     if not op_final then
       error("Unknown op: " .. op)
     end
+
+    local luau_allowed = { "+=", "-=", "/=", "%=", "..=", "%=", "*=" }
+    for i = 1, #luau_allowed do
+      if luau_allowed[i] == op then
+        return {
+          "update_var",
+          name,
+          op,
+          exp
+        }
+      end
+    end
+
     local lifted
     if ntype(name) == "chain" then
       lifted = { }
@@ -337,6 +350,7 @@ return Transformer({
         end
         values = _accum_0
       end
+
       out = build.group({
         {
           "assign",

@@ -56,9 +56,19 @@ return {
       return _with_0
     end
   end,
+  update_var = function(self, node)
+    local name, op, value = unpack(node, 2)
+
+    local line = self:line()
+    line:append(name[2])
+    line:append(" " .. op .. " ")
+    line:append(value[2])
+    return line
+  end,
   assign = function(self, node)
     local names, values = unpack(node, 2)
     local undeclared = self:declare(names)
+
     local declare = "local " .. concat(undeclared, ", ")
     local has_fndef = false
     local i = 1
@@ -108,10 +118,10 @@ return {
       end
     end)())
   end,
-  ["break"] = function(self, node)
+  ["break"] = function(self)
     return "break"
   end,
-  ["continue"] = function(self, node)
+  ["continue"] = function(self)
     return "continue"
   end,
   ["if"] = function(self, node)

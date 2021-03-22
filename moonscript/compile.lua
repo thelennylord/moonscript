@@ -23,7 +23,7 @@ end
 local pos_to_line, get_closest_line, trim, unpack
 pos_to_line, get_closest_line, trim, unpack = util.pos_to_line, util.get_closest_line, util.trim, util.unpack
 local mtype = util.moon.type
-local indent_char = "  "
+local indent_char = "    "
 local Line, DelayedLine, Lines, Block, RootBlock
 do
   local _class_0
@@ -38,9 +38,7 @@ do
     end,
     add = function(self, item)
       local _exp_0 = mtype(item)
-      if Line == _exp_0 then
-        item:render(self)
-      elseif Block == _exp_0 then
+      if Line == _exp_0 or Block == _exp_0 then
         item:render(self)
       else
         self[#self + 1] = item
@@ -482,6 +480,7 @@ do
       end
       local fn = self.value_compilers[action]
       if not (fn) then
+        --selene: allow(incorrect_standard_library_use)
         error({
           "compile-error",
           "Failed to find value compiler for: " .. dump.value(node),
